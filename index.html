@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>La Reina Orgánica | Miel pura de La Rioja</title>
+  <meta name="description" content="La Reina Orgánica: miel pura, polen y productos apícolas. Compras con carrito, registro por teléfono y blog educativo." />
+
+  <!--
+    💡 PROYECTO: La Reina Orgánica (prototipo estático para GitHub Pages)
+    TECNOLOGÍAS: HTML + CSS + JavaScript puro (sin build). Comentado para aprender.
+    LIMITACIONES: Al ser estático (sin servidor), usamos localStorage para simular base de datos
+                  y (opcional) EmailJS para enviar pedidos por email sin backend.
+
+    ESTRUCTURA DE SECCIONES:
+      - Inicio
+      - Productos (catálogo + "Agregar al carrito")
+      - Carrito (checkout con datos del cliente)
+      - Clientes ("login" por teléfono sin contraseña + historial)
+      - Sobre Nosotros
+      - Blog / Novedades
+      - Contacto (formulario + mapa)
+
+    📌 CÓMO PUBLICAR EN GITHUB PAGES
+      1) Crear un repo: LaReinaOrganica (o el que prefieras)
+      2) Subir este index.html a la raíz del repo
+      3) En GitHub: Settings → Pages → Deploy from a branch → main /root → Save
+      4) Esperar 1–2 minutos y abrir la URL pública que te da GitHub
+
+    🧪 CONSEJO: Abre la consola del navegador (F12) para ver logs explicativos.
+  -->
+
+  <style>
+    :root{
+      --bg:#fffdf7;         /* fondo claro tipo papel */
+      --text:#1f1f1f;       /* texto principal */
+      --brand:#cfa016;      /* amarillo miel */
+      --brand-dark:#9b770e; /* tono más oscuro para hover */
+      --card:#ffffff;       /* tarjetas */
+      --muted:#666;         /* texto secundario */
+      --border:#eee;        /* bordes suaves */
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+    .container{width:100%;max-width:1100px;margin:auto;padding:0 16px}
+
+    /* NAVBAR */
+    header{position:sticky;top:0;z-index:50;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:12px 0}
+    .logo{display:flex;gap:10px;align-items:center}
+    .logo .mark{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#ffd14b,#f0b90b)}
+    .nav a{padding:8px 10px;border-radius:10px}
+    .nav a:hover{background:#faf7ea}
+    .badge{background:var(--brand);color:#fff;border-radius:999px;padding:6px 12px;font-weight:600}
+
+    /* HERO */
+    .hero{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:center;padding:40px 0}
+    .hero h1{font-size:40px;line-height:1.1;margin:0 0 10px}
+    .hero p{color:var(--muted);font-size:18px}
+    .cta{display:flex;gap:12px;margin-top:16px}
+    .btn{background:var(--brand);color:#fff;border:none;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer}
+    .btn:hover{background:var(--brand-dark)}
+    .btn.ghost{background:transparent;color:var(--brand);border:2px solid var(--brand)}
+    .btn.ghost:hover{color:#fff;background:var(--brand)}
+
+    /* SECTIONS */
+    section{padding:36px 0;border-top:1px solid var(--border)}
+    h2{font-size:28px;margin:0 0 16px}
+    .grid{display:grid;gap:16px}
+    .cards{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+    .card .content{padding:12px 14px}
+    .price{font-weight:800}
+    .muted{color:var(--muted)}
+
+    /* FORMS */
+    form{display:grid;gap:10px}
+    input,select,textarea{padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:#fff}
+    label{font-size:14px;color:var(--muted)}
+
+    /* LAYOUT UTILS */
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .col{flex:1;min-width:220px}
+
+    /* CART SIDEBAR */
+    .cart-summary{position:sticky;top:76px;background:#fff;border:1px solid var(--border);border-radius:16px;padding:14px}
+
+    /* FOOTER */
+    footer{padding:28px 0;border-top:1px solid var(--border);color:var(--muted);font-size:14px}
+
+    /* RESPONSIVE */
+    @media (max-width: 900px){
+      .hero{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <!-- ===== NAVBAR ===== -->
+  <header>
+    <div class="container nav">
+      <div class="logo">
+        <div class="mark" aria-hidden="true"></div>
+        <strong>La Reina Orgánica</strong>
+      </div>
+      <nav class="row" aria-label="Navegación principal">
+        <a href="#inicio">Inicio</a>
+        <a href="#productos">Productos</a>
+        <a href="#carrito">Carrito <span id="cartCount" class="badge" title="Ítems en carrito">0</span></a>
+        <a href="#clientes">Clientes</a>
+        <a href="#sobre">Sobre Nosotros</a>
+        <a href="#blog">Blog</a>
+        <a href="#contacto">Contacto</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ===== HERO / INICIO ===== -->
+  <main id="inicio" class="container hero">
+    <div>
+      <h1>Miel pura de Chamical, La Rioja</h1>
+      <p>Producción responsable, cosechada a baja escala. Envíos a todo el país. Apoyás a un apicultor local 💛.</p>
+      <div class="cta">
+        <a class="btn" href="#productos">Ver productos</a>
+        <a class="btn ghost" href="#blog">Aprendé sobre la miel</a>
+      </div>
+    </div>
+    <div>
+      <!-- Reemplaza esta imagen por una foto real del apiario o frascos -->
+      <img alt="Frascos de miel sobre madera" src="https://images.unsplash.com/photo-1514996937319-344454492b37?q=80&w=1200&auto=format&fit=crop"/>
+    </div>
+  </main>
+
+  <!-- ===== PRODUCTOS ===== -->
+  <section id="productos">
+    <div class="container">
+      <h2>Productos</h2>
+      <p class="muted">Elegí el formato que más te convenga. Podés personalizar cantidades antes de agregar al carrito.</p>
+
+      <div class="grid" style="grid-template-columns: 3fr 1.4fr; gap:22px">
+        <!-- Catálogo -->
+        <div class="grid cards" id="productGrid"></div>
+
+        <!-- Resumen del carrito (pegado a la derecha) -->
+        <aside class="cart-summary">
+          <h3 style="margin-top:0">Tu carrito</h3>
+          <div id="cartItems" class="grid" style="gap:10px"></div>
+          <hr />
+          <div class="row" style="justify-content:space-between">
+            <strong>Total</strong>
+            <strong id="cartTotal">$ 0</strong>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <a class="btn" href="#carrito">Ir a pagar</a>
+            <button class="btn ghost" id="clearCartBtn" type="button">Vaciar</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CARRITO / CHECKOUT ===== -->
+  <section id="carrito">
+    <div class="container">
+      <h2>Finalizar compra</h2>
+      <div class="row">
+        <!-- Resumen de compra -->
+        <div class="col">
+          <div class="card">
+            <div class="content">
+              <h3 style="margin:6px 0">Resumen</h3>
+              <div id="checkoutSummary" class="grid" style="gap:8px"></div>
+              <hr />
+              <div class="row" style="justify-content:space-between">
+                <span class="muted">Total</span>
+                <strong id="checkoutTotal">$ 0</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Formulario de pedido -->
+        <div class="col">
+          <div class="card">
+            <div class="content">
+              <h3 style="margin:6px 0">Datos del pedido</h3>
+              <!--
+                🔐 REGISTRO SIN CONTRASEÑA
+                - La "primary key" del cliente será el N° de teléfono (string).
+                - Guardamos/actualizamos cliente + historial de pedidos en localStorage.
+              -->
+              <form id="orderForm">
+                <div class="row">
+                  <div class="col">
+                    <label for="name">Nombre y Apellido</label>
+                    <input id="name" required placeholder="Ej: Ana Gómez" />
+                  </div>
+                  <div class="col">
+                    <label for="phone">Teléfono (login)</label>
+                    <input id="phone" required placeholder="Ej: 3804 123456" />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col">
+                    <label for="email">Email</label>
+                    <input id="email" type="email" placeholder="Ej: ana@mail.com" />
+                  </div>
+                  <div class="col">
+                    <label for="address">Dirección de envío</label>
+                    <input id="address" required placeholder="Calle 123, Ciudad, Provincia" />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col">
+                    <label for="payment">Método de pago</label>
+                    <select id="payment" required>
+                      <option value="Transferencia">Transferencia</option>
+                      <option value="Contra entrega">Contra entrega</option>
+                    </select>
+                  </div>
+                  <div class="col">
+                    <label for="notes">Notas (opcional)</label>
+                    <input id="notes" placeholder="Indica preferencias o aclaraciones" />
+                  </div>
+                </div>
+                <label style="display:flex;gap:8px;align-items:center">
+                  <input id="newsletter" type="checkbox" /> Quiero recibir novedades y ofertas
+                </label>
+
+                <div class="row" style="margin-top:8px">
+                  <button class="btn" type="submit">Confirmar pedido</button>
+                  <button class="btn ghost" type="button" id="fakePayBtn">Simular pago</button>
+                </div>
+
+                <!--
+                  ✉️ OPCIONAL: Enviar por EmailJS (sin servidor)
+                  1) Crear cuenta en https://www.emailjs.com/
+                  2) Crear un Service y un Template
+                  3) Incluir el script CDN: <script src="https://cdn.emailjs.com/sdk/3.11.0/email.min.js"></script>
+                  4) Inicializar emailjs.init("TU_PUBLIC_KEY") y usar emailjs.send(...)
+                  5) Ver ejemplo en la función sendOrderByEmail() en el JS abajo (comentada)
+                -->
+              </form>
+              <p id="orderMsg" class="muted" style="margin-top:8px"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CLIENTES (login por teléfono) ===== -->
+  <section id="clientes">
+    <div class="container">
+      <h2>Clientes</h2>
+      <div class="row">
+        <div class="col">
+          <div class="card"><div class="content">
+            <h3 style="margin:6px 0">Ingresá con tu teléfono</h3>
+            <form id="loginForm" class="row">
+              <div class="col"><input id="loginPhone" placeholder="Tu teléfono" required /></div>
+              <div class="col"><button class="btn" type="submit">Ver historial</button></div>
+            </form>
+            <p class="muted" style="margin:6px 0">No usamos contraseña. Tu número es tu llave.</p>
+          </div></div>
+        </div>
+        <div class="col">
+          <div class="card"><div class="content">
+            <h3 style="margin:6px 0">Historial de compras</h3>
+            <div id="history"></div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn ghost" id="exportClientBtn" type="button">Exportar mis datos (JSON)</button>
+              <button class="btn" id="logoutBtn" type="button">Salir</button>
+            </div>
+          </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SOBRE NOSOTROS ===== -->
+  <section id="sobre">
+    <div class="container">
+      <h2>Sobre nosotros</h2>
+      <div class="row">
+        <div class="col">
+          <p>
+            Somos apicultores de Chamical, La Rioja. Cosechamos miel orgánica y productos derivados
+            respetando los ciclos naturales de las abejas y la biodiversidad local.
+          </p>
+          <ul class="muted">
+            <li>Prácticas de bajo impacto y trazabilidad simple.</li>
+            <li>Fraccionado responsable y control de calidad.</li>
+            <li>Venta directa y envíos a todo el país.</li>
+          </ul>
+        </div>
+        <div class="col">
+          <!-- Reemplazar por fotos propias -->
+          <img alt="Apiario en La Rioja" src="https://images.unsplash.com/photo-1464226184884-fa280b87c399?q=80&w=1200&auto=format&fit=crop" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== BLOG / NOVEDADES ===== -->
+  <section id="blog">
+    <div class="container">
+      <h2>Blog / Novedades</h2>
+      <div class="grid cards" id="blogGrid"></div>
+    </div>
+  </section>
+
+  <!-- ===== CONTACTO ===== -->
+  <section id="contacto">
+    <div class="container">
+      <h2>Contacto</h2>
+      <div class="row">
+        <div class="col">
+          <div class="card"><div class="content">
+            <form id="contactForm">
+              <label for="cname">Nombre</label>
+              <input id="cname" required />
+              <label for="cemail">Email</label>
+              <input id="cemail" type="email" required />
+              <label for="cmsg">Mensaje</label>
+              <textarea id="cmsg" rows="4" required placeholder="Escribinos tu consulta"></textarea>
+              <button class="btn" type="submit">Enviar</button>
+              <p class="muted" id="contactMsg"></p>
+            </form>
+          </div></div>
+        </div>
+        <div class="col">
+          <!-- Mapa incrustado: editá el src con tu ubicación exacta (Google Maps → Compartir → Insertar un mapa) -->
+          <div class="card"><div class="content">
+            <h3 style="margin:6px 0">Dónde estamos</h3>
+            <iframe title="Mapa Chamical" width="100%" height="280" style="border:0;border-radius:12px"
+                    loading="lazy" allowfullscreen
+                    referrerpolicy="no-referrer-when-downgrade"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d10910.993149541317!2d-66.322!3d-30.360!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95d18f4e1d7b7a2d%3A0x0!2sChamical%2C%20La%20Rioja!5e0!3m2!1ses!2sar!4v1710000000000"></iframe>
+          </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container row" style="justify-content:space-between;align-items:center">
+      <div class="row" style="gap:10px;align-items:center">
+        <div class="mark" style="width:20px;height:20px"></div>
+        <span>© <span id="year"></span> La Reina Orgánica</span>
+      </div>
+      <div class="row">
+        <a href="#inicio">Inicio</a>
+        <span class="muted">·</span>
+        <a href="#productos">Productos</a>
+        <span class="muted">·</span>
+        <a href="#contacto">Contacto</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // =============================
+    // 🔧 UTILIDADES
+    // =============================
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+    // Formateo de moneda simple (ARS por defecto)
+    const money = (n) => new Intl.NumberFormat('es-AR', { style:'currency', currency:'ARS' }).format(n);
+
+    // LocalStorage helpers
+    const LS = {
+      get(key, fallback){
+        try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback }
+      },
+      set(key, val){ localStorage.setItem(key, JSON.stringify(val)); },
+      del(key){ localStorage.removeItem(key); }
+    }
+
+    // =============================
+    // 📦 CATÁLOGO (ejemplo inicial)
+    // 👉 Reemplazá/extendé este array con tus productos reales
+    // =============================
+    const PRODUCTS = [
+      {id:'miel500', name:'Miel Pura 500g', price:3500, img:'https://images.unsplash.com/photo-1528909514045-2fa4ac7a08ba?q=80&w=1200&auto=format&fit=crop', desc:'Frasco de 500g. Ideal para consumo familiar.'},
+      {id:'miel1000', name:'Miel Pura 1kg', price:6200, img:'https://images.unsplash.com/photo-1517260739337-6799d9f0d029?q=80&w=1200&auto=format&fit=crop', desc:'Formato económico de 1kg.'},
+      {id:'polen200', name:'Polen 200g', price:5400, img:'https://images.unsplash.com/photo-1519680772-6b50ce9bcd4e?q=80&w=1200&auto=format&fit=crop', desc:'Energía natural en gránulos.'},
+      {id:'propoleo30', name:'Propóleo 30ml', price:4800, img:'https://images.unsplash.com/photo-1624301164400-9cdecc8f289e?q=80&w=1200&auto=format&fit=crop', desc:'Tintura madre de propóleo.'}
+    ];
+
+    // =============================
+    // 🛒 CARRITO
+    // Estructura: [{id, name, price, qty}]
+    // =============================
+    const CART_KEY = 'lro_cart';
+
+    function getCart(){ return LS.get(CART_KEY, []); }
+    function saveCart(cart){ LS.set(CART_KEY, cart); renderCart(); renderCheckout(); }
+
+    function addToCart(productId, qty){
+      const cart = getCart();
+      const p = PRODUCTS.find(x => x.id === productId);
+      if(!p) return;
+      const q = Math.max(1, Number(qty)||1); // asegura número >=1
+      const i = cart.findIndex(x => x.id === productId);
+      if(i>=0){ cart[i].qty += q; } else { cart.push({id:p.id, name:p.name, price:p.price, qty:q}); }
+      saveCart(cart);
+    }
+
+    function removeFromCart(productId){
+      const cart = getCart().filter(x => x.id !== productId);
+      saveCart(cart);
+    }
+
+    function updateQty(productId, qty){
+      const cart = getCart();
+      const item = cart.find(x => x.id === productId);
+      if(!item) return;
+      item.qty = Math.max(1, Number(qty)||1);
+      saveCart(cart);
+    }
+
+    function cartTotal(){
+      return getCart().reduce((acc, it) => acc + it.price * it.qty, 0);
+    }
+
+    function renderCart(){
+      // contador en la navbar
+      $('#cartCount').textContent = getCart().reduce((a,b)=>a+b.qty,0);
+
+      // resumen lateral en sección productos
+      const cont = $('#cartItems');
+      cont.innerHTML = '';
+      getCart().forEach(it => {
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = `
+          <div style="flex:2">${it.name}<br><span class="muted">${money(it.price)}</span></div>
+          <div style="flex:1"><input type="number" min="1" value="${it.qty}" style="width:100%" aria-label="Cantidad" /></div>
+          <button class="btn ghost" type="button">X</button>
+        `;
+        const [_, qtyInput, removeBtn] = row.querySelectorAll('input,button');
+        qtyInput.addEventListener('change', e => updateQty(it.id, e.target.value));
+        removeBtn.addEventListener('click', () => removeFromCart(it.id));
+        cont.appendChild(row);
+      });
+      $('#cartTotal').textContent = money(cartTotal());
+    }
+
+    // =============================
+    // 🧾 CHECKOUT (resumen + submit)
+    // =============================
+    function renderCheckout(){
+      const list = $('#checkoutSummary');
+      list.innerHTML = '';
+      getCart().forEach(it => {
+        const line = document.createElement('div');
+        line.className = 'row';
+        line.innerHTML = `<span>${it.name} × ${it.qty}</span><strong>${money(it.price*it.qty)}</strong>`;
+        list.appendChild(line);
+      });
+      $('#checkoutTotal').textContent = money(cartTotal());
+    }
+
+    // =============================
+    // 👤 CLIENTES (clave: teléfono)
+    // Estructura cliente: { phone, name, email, address, newsletter, orders: [Order] }
+    // Estructura order: { id, dateISO, items:[{id,name,price,qty}], total, payment, notes }
+    // =============================
+    const CLIENTS_KEY = 'lro_clients';
+
+    function getClients(){ return LS.get(CLIENTS_KEY, {}); }
+    function saveClients(db){ LS.set(CLIENTS_KEY, db); }
+
+    function upsertClient(client){
+      const db = getClients();
+      db[client.phone] = {...(db[client.phone]||{}), ...client};
+      saveClients(db);
+    }
+
+    function addOrderToClient(phone, order){
+      const db = getClients();
+      const cli = db[phone] || {phone, orders:[]};
+      cli.orders = cli.orders || [];
+      cli.orders.push(order);
+      db[phone] = cli;
+      saveClients(db);
+    }
+
+    // =============================
+    // ✉️ EmailJS (OPCIONAL)
+    // Descomentá y completá tus claves para enviar el pedido por correo sin backend.
+    // =============================
+    async function sendOrderByEmail(order, customer){
+      // if(!window.emailjs){ console.warn('EmailJS no está cargado'); return; }
+      // emailjs.init('TU_PUBLIC_KEY');
+      // return emailjs.send('TU_SERVICE_ID','TU_TEMPLATE_ID',{
+      //   to_name: 'La Reina Orgánica',
+      //   from_name: customer.name,
+      //   from_phone: customer.phone,
+      //   from_email: customer.email || '',
+      //   address: customer.address,
+      //   payment: order.payment,
+      //   notes: order.notes || '',
+      //   total: money(order.total),
+      //   items: order.items.map(i=>`${i.name} x${i.qty} = ${money(i.price*i.qty)}`).join('\n')
+      // });
+    }
+
+    // =============================
+    // 🚀 RENDER INICIAL DEL CATÁLOGO
+    // =============================
+    function renderProducts(){
+      const grid = $('#productGrid');
+      grid.innerHTML = '';
+      PRODUCTS.forEach(p => {
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.innerHTML = `
+          <img alt="${p.name}" src="${p.img}" />
+          <div class="content">
+            <strong>${p.name}</strong>
+            <div class="muted">${p.desc}</div>
+            <div class="row" style="justify-content:space-between;align-items:center;margin-top:6px">
+              <span class="price">${money(p.price)}</span>
+              <div class="row" style="align-items:center">
+                <input type="number" min="1" value="1" style="width:76px" aria-label="Cantidad ${p.name}" />
+                <button class="btn" type="button">Agregar</button>
+              </div>
+            </div>
+          </div>
+        `;
+        const qtyInput = card.querySelector('input');
+        card.querySelector('button').addEventListener('click', ()=> addToCart(p.id, qtyInput.value));
+        grid.appendChild(card);
+      });
+    }
+
+    // =============================
+    // 📰 BLOG (contenido de ejemplo)
+    // En producción podrías leer de JSON estático o CMS sin backend (ej. Netlify CMS)
+    // =============================
+    const BLOG = [
+      {title:'Beneficios de la miel cruda', excerpt:'La miel cruda conserva enzimas y compuestos bioactivos que pueden perderse con el sobrecalentamiento.', date:'2025-08-01'},
+      {title:'Cómo reconocer miel genuina', excerpt:'Color, cristalización y aroma son pistas. Te contamos qué mirar antes de comprar.', date:'2025-07-15'},
+      {title:'Cosecha de invierno en Chamical', excerpt:'Breve crónica del proceso y condiciones climáticas de esta temporada.', date:'2025-06-20'}
+    ];
+
+    function renderBlog(){
+      const grid = $('#blogGrid');
+      grid.innerHTML = '';
+      BLOG.forEach(p => {
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="content">
+            <div class="muted" style="font-size:12px">${new Date(p.date).toLocaleDateString('es-AR')}</div>
+            <strong style="display:block;margin:4px 0">${p.title}</strong>
+            <p class="muted">${p.excerpt}</p>
+            <a class="btn ghost" href="#" aria-disabled="true">Leer (pronto)</a>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // =============================
+    // 📬 CONTACTO (simulado)
+    // En producción: EmailJS o servicio similar. Por ahora mostramos mensaje de éxito.
+    // =============================
+    $('#contactForm').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      $('#contactMsg').textContent = '¡Gracias! Te responderemos a la brevedad.';
+      e.target.reset();
+    });
+
+    // =============================
+    // 🧠 FLOW DE PEDIDO
+    // 1) Usuario completa formulario
+    // 2) Se crea Order y se guarda en historial del cliente (key: phone)
+    // 3) (Opcional) Se envía por EmailJS
+    // 4) Se limpia el carrito
+    // =============================
+    $('#orderForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const cart = getCart();
+      if(cart.length === 0){ $('#orderMsg').textContent = 'Tu carrito está vacío.'; return; }
+
+      const customer = {
+        name: $('#name').value.trim(),
+        phone: $('#phone').value.trim(),
+        email: $('#email').value.trim(),
+        address: $('#address').value.trim(),
+        newsletter: $('#newsletter').checked
+      };
+      const order = {
+        id: 'ORD-' + Date.now(),
+        dateISO: new Date().toISOString(),
+        items: cart.map(x=>({...x})),
+        total: cartTotal(),
+        payment: $('#payment').value,
+        notes: $('#notes').value.trim()
+      };
+
+      // Actualiza/crea cliente + historial
+      upsertClient(customer);
+      addOrderToClient(customer.phone, order);
+
+      // Envío por email (opcional)
+      try{
+        await sendOrderByEmail(order, customer);
+      }catch(err){ console.warn('Email opcional no enviado:', err?.message||err); }
+
+      // Limpieza de carrito
+      LS.del(CART_KEY);
+      renderCart();
+      renderCheckout();
+      $('#orderMsg').textContent = '¡Pedido confirmado! Guardamos tu historial. Te contactaremos para coordinar el envío.';
+      e.target.reset();
+      // Desplaza al área de Clientes para que pueda ver su historial
+      location.hash = '#clientes';
+    });
+
+    // Botones auxiliares
+    $('#clearCartBtn').addEventListener('click', ()=>{ LS.del(CART_KEY); renderCart(); renderCheckout(); });
+    $('#fakePayBtn').addEventListener('click', ()=>{ alert('Simulación de pago: en producción integrarías Mercado Pago / transferencia.'); });
+
+    // =============================
+    // 🔓 LOGIN CLIENTES (por teléfono) + HISTORIAL
+    // =============================
+    let currentClient = null; // estado simple en memoria
+
+    function renderHistory(phone){
+      const db = getClients();
+      const cli = db[phone];
+      const box = $('#history');
+      if(!cli){ box.innerHTML = '<p class="muted">No encontramos compras asociadas a ese número.</p>'; return; }
+
+      currentClient = phone;
+      const header = `
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div>
+            <strong>${cli.name || 'Cliente sin nombre'}</strong><br>
+            <span class="muted">${cli.phone}</span>
+          </div>
+          <label style="display:flex;gap:8px;align-items:center">
+            <input id="cliNewsletter" type="checkbox" ${cli.newsletter?'checked':''}/> Newsletter
+          </label>
+        </div>
+        <hr />
+      `;
+
+      const orders = (cli.orders||[]).slice().reverse();
+      if(orders.length===0){ box.innerHTML = header + '<p class="muted">Sin pedidos aún.</p>'; return; }
+
+      const list = orders.map(o=>{
+        const lines = o.items.map(i=>`<div class="row" style="justify-content:space-between"><span>${i.name} × ${i.qty}</span><span>${money(i.price*i.qty)}</span></div>`).join('');
+        return `
+          <div class="card" style="margin-bottom:10px"><div class="content">
+            <div class="row" style="justify-content:space-between">
+              <strong>#${o.id}</strong>
+              <span class="muted">${new Date(o.dateISO).toLocaleString('es-AR')}</span>
+            </div>
+            <div class="grid" style="gap:4px;margin:6px 0">${lines}</div>
+            <div class="row" style="justify-content:space-between">
+              <span class="muted">Pago: ${o.payment}</span>
+              <strong>Total: ${money(o.total)}</strong>
+            </div>
+            ${o.notes ? `<div class="muted" style="margin-top:6px">Notas: ${o.notes}</div>`:''}
+          </div></div>
+        `;
+      }).join('');
+
+      box.innerHTML = header + list;
+
+      // toggle newsletter guardado
+      $('#cliNewsletter').addEventListener('change', (e)=>{
+        const db = getClients();
+        if(!db[phone]) return;
+        db[phone].newsletter = e.target.checked;
+        saveClients(db);
+      });
+    }
+
+    $('#loginForm').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const phone = $('#loginPhone').value.trim();
+      if(!phone){ return }
+      renderHistory(phone);
+    });
+
+    $('#logoutBtn').addEventListener('click', ()=>{
+      currentClient = null;
+      $('#history').innerHTML = '<p class="muted">Sesión cerrada.</p>';
+    });
+
+    // Exportación de datos del cliente actual (cumple con portabilidad básica)
+    $('#exportClientBtn').addEventListener('click', ()=>{
+      if(!currentClient){ alert('Primero iniciá sesión con tu teléfono.'); return; }
+      const db = getClients();
+      const data = db[currentClient];
+      const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `cliente_${currentClient}.json`; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // =============================
+    // 🏁 INICIALIZACIÓN
+    // =============================
+    function init(){
+      $('#year').textContent = new Date().getFullYear();
+      renderProducts();
+      renderCart();
+      renderCheckout();
+      renderBlog();
+    }
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
